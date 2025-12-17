@@ -1,0 +1,1328 @@
+--------------------------------------------------
+File: C:\Users\scjot\Documents\cryptocard-premium-landing-page\components\AICardRecommender.tsx
+--------------------------------------------------
+
+import React, { useState } from 'react';
+import { GoogleGenAI, Type } from '@google/genai';
+import { Sparkles, Loader2, Check } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+
+const AICardRecommender: React.FC = () => {
+  const [profile, setProfile] = useState('');
+  const [recommendation, setRecommendation] = useState<any>(null);
+  const [loading, setLoading] = useState(false);
+
+  const getRecommendation = async () => {
+    if (!profile.trim()) return;
+    setLoading(true);
+    try {
+      const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+      const response = await ai.models.generateContent({
+        model: 'gemini-3-flash-preview',
+        contents: `Analise o seguinte perfil de usuário para recomendar um dos nossos planos de cartão cripto (Essential, Pro, ou Black Elite).
+        
+        Perfil do Usuário: "${profile}"
+        
+        Regras de Planos:
+        1. Essential: Para iniciantes, 1% cashback, limite de $1k/mês.
+        2. Pro: Para investidores frequentes, 2.5% cashback, benefícios em aeroportos, limite de $10k/mês.
+        3. Black Elite: Para baleias/high net worth, 5% cashback, concierge 24h, limites ilimitados.
+
+        Retorne um JSON com: planName, reason (curta em PT-BR), highlightBenefit.`,
+        config: {
+          responseMimeType: "application/json",
+          responseSchema: {
+            type: Type.OBJECT,
+            properties: {
+              planName: { type: Type.STRING },
+              reason: { type: Type.STRING },
+              highlightBenefit: { type: Type.STRING }
+            },
+            required: ["planName", "reason", "highlightBenefit"]
+          }
+        }
+      });
+
+      const data = JSON.parse(response.text);
+      setRecommendation(data);
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <section className="py-24 bg-white">
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+        <motion.div 
+          initial={{ opacity: 0, scale: 0.95 }}
+          whileInView={{ opacity: 1, scale: 1 }}
+          viewport={{ once: true }}
+          className="bg-slate-50 rounded-[3rem] p-10 lg:p-16 border border-slate-100"
+        >
+          <div className="flex flex-col items-center text-center gap-4 mb-12">
+            <div className="w-16 h-16 bg-black rounded-2xl flex items-center justify-center text-accent">
+              <Sparkles size={32} />
+            </div>
+            <div>
+              <h2 className="text-3xl font-black text-black uppercase tracking-tighter">Match Inteligente</h2>
+              <p className="text-slate-500 font-medium">Nossa IA escolhe o melhor nível de privilégio para você.</p>
+            </div>
+          </div>
+
+          <div className="space-y-8">
+            <div className="relative">
+              <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-3 ml-2">
+                Conte-nos sobre sua rotina financeira
+              </label>
+              <textarea
+                value={profile}
+                onChange={(e) => setProfile(e.target.value)}
+                placeholder="Ex: Viajo muito a trabalho, invisto em ETH e gasto cerca de 8k por mês em restaurantes."
+                className="w-full h-40 px-8 py-6 rounded-3xl border-2 border-slate-200 bg-white focus:ring-4 focus:ring-accent/20 focus:border-black transition-all outline-none text-black font-medium resize-none text-lg shadow-sm"
+              />
+            </div>
+
+            <button
+              onClick={getRecommendation}
+              disabled={loading || !profile.trim()}
+              className="w-full bg-black text-white py-6 rounded-3xl font-black text-xl flex items-center justify-center gap-3 hover:bg-accent hover:text-black transition-all disabled:opacity-50 active:scale-[0.98]"
+            >
+              {loading ? (
+                <Loader2 className="animate-spin" />
+              ) : (
+                <>Analisar Perfil <Sparkles size={22} /></>
+              )}
+            </button>
+
+            <AnimatePresence mode="wait">
+              {recommendation && (
+                <motion.div 
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -20 }}
+                  className="mt-12 p-8 bg-white rounded-3xl border-2 border-accent shadow-xl shadow-accent/10"
+                >
+                  <div className="flex justify-between items-start mb-6">
+                    <span className="text-xs font-black uppercase tracking-[0.2em] text-black px-4 py-1.5 bg-accent rounded-full">
+                      Resultado da Análise
+                    </span>
+                    <div className="flex items-center text-lime-600 text-sm font-black uppercase tracking-tighter">
+                      <Check size={18} className="mr-1" /> Perfeito para você
+                    </div>
+                  </div>
+                  <h3 className="text-4xl font-black text-black mb-4 tracking-tighter">{recommendation.planName}</h3>
+                  <p className="text-slate-600 mb-8 text-lg font-medium leading-relaxed">{recommendation.reason}</p>
+                  <div className="flex items-center gap-3 text-black font-black bg-accent/30 p-5 rounded-2xl border border-accent/40">
+                    <Sparkles size={20} />
+                    <span>Destaque: {recommendation.highlightBenefit}</span>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+        </motion.div>
+      </div>
+    </section>
+  );
+};
+
+export default AICardRecommender;
+
+
+--------------------------------------------------
+File: C:\Users\scjot\Documents\cryptocard-premium-landing-page\components\Benefits.tsx
+--------------------------------------------------
+
+import React from 'react';
+import { motion } from 'framer-motion';
+
+const Benefits: React.FC = () => {
+  const floatingIcons = [
+    { src: "https://cdn.prod.website-files.com/668fc11cc73a66df17137589/67b59d2eb955ff78c2e70a74_da.png", pos: "top-10 -left-12", delay: 0 },
+    { src: "https://cdn.prod.website-files.com/668fc11cc73a66df17137589/668fedfe178e921807d08916_teather%20icon.png", pos: "bottom-20 -left-16", delay: 0.5 },
+    { src: "https://cdn.prod.website-files.com/668fc11cc73a66df17137589/66960e4b65c8722b22ab94b4_eth%20icon.svg", pos: "top-20 -right-12", delay: 1 },
+    { src: "https://cdn.prod.website-files.com/668fc11cc73a66df17137589/67b59d8b681995fb850f27b4_fsd.png", pos: "bottom-10 -right-8", delay: 1.5 },
+  ];
+
+  return (
+    <section id="benefits" className="py-24 lg:py-40 bg-white overflow-hidden">
+      <div className="max-w-7xl mx-auto px-6">
+        <div className="grid lg:grid-cols-2 gap-12 lg:gap-24 items-center">
+          
+          {/* Texto à Esquerda */}
+          <motion.div 
+            initial={{ opacity: 0, x: -50 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.8, ease: "easeOut" }}
+            className="order-2 lg:order-1"
+          >
+            <h2 className="text-5xl lg:text-7xl font-black text-black mb-8 uppercase tracking-tighter leading-[0.9]">
+              Recarga gratuita <br />
+              de criptomoedas <br />
+              <span className="text-slate-200 uppercase">e Fiat</span>
+            </h2>
+            <p className="text-xl lg:text-2xl text-slate-500 leading-relaxed font-medium max-w-xl">
+              Recarga fácil, processamento rápido. <span className="text-black font-black underline decoration-accent decoration-4">0% de comissão.</span>
+            </p>
+            
+            <div className="mt-12 flex items-center gap-6">
+              <div className="h-px w-20 bg-slate-200"></div>
+              <p className="text-xs font-black uppercase tracking-[0.3em] text-slate-400">Processamento Instantâneo</p>
+            </div>
+          </motion.div>
+
+          {/* Imagem à Direita com Ícones Flutuantes */}
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.9 }}
+            whileInView={{ opacity: 1, scale: 1 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.8 }}
+            className="relative order-1 lg:order-2 flex justify-center"
+          >
+            {/* Glow Background */}
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[120%] h-[120%] bg-accent/10 rounded-full blur-[120px] -z-10"></div>
+            
+            <div className="relative">
+              {/* iPhone Mockup */}
+              <img 
+                src="https://cdn.prod.website-files.com/668fc11cc73a66df17137589/67b849a16e09523869bf7e16_%5BMockup%5D%20iPhone%2019%20(2).png" 
+                alt="iPhone Mockup Karta Recarga" 
+                className="w-full max-w-[380px] h-auto object-contain drop-shadow-[0_35px_35px_rgba(0,0,0,0.15)]"
+              />
+
+              {/* Ícones Flutuantes */}
+              {floatingIcons.map((icon, idx) => (
+                <motion.div
+                  key={idx}
+                  className={`absolute ${icon.pos} w-16 h-16 lg:w-20 lg:h-20 bg-white rounded-3xl p-4 shadow-2xl border border-slate-50 flex items-center justify-center`}
+                  animate={{
+                    y: [0, -15, 0],
+                    rotate: [0, idx % 2 === 0 ? 5 : -5, 0]
+                  }}
+                  transition={{
+                    duration: 4,
+                    repeat: Infinity,
+                    ease: "easeInOut",
+                    delay: icon.delay
+                  }}
+                >
+                  <img src={icon.src} alt="Crypto Icon" className="w-full h-full object-contain" />
+                </motion.div>
+              ))}
+            </div>
+          </motion.div>
+
+        </div>
+      </div>
+    </section>
+  );
+};
+
+export default Benefits;
+
+
+--------------------------------------------------
+File: C:\Users\scjot\Documents\cryptocard-premium-landing-page\components\FAQ.tsx
+--------------------------------------------------
+
+import React, { useState } from 'react';
+import { Plus, Minus } from 'lucide-react';
+
+const faqData = [
+  { q: "What is Karta?", a: "Karta is your virtual crypto card directly integrated with Telegram." },
+  { q: "Are there any fees for registration?", a: "No, registration is completely free." },
+  { q: "How do I get the card?", a: "Simply open our bot on Telegram and follow the instructions." },
+  { q: "How can I fund my account?", a: "You can fund using any supported cryptocurrency." }
+];
+
+const FAQ: React.FC = () => {
+  const [open, setOpen] = useState<number | null>(null);
+
+  return (
+    <section className="py-32 bg-black text-white">
+      <div className="max-w-3xl mx-auto px-6">
+        <h2 className="text-5xl font-black text-center text-lime-karta mb-20 uppercase tracking-tighter">F.A.Q.</h2>
+        
+        <div className="space-y-4">
+          {faqData.map((item, i) => (
+            <div key={i} className="faq-item">
+              <button 
+                onClick={() => setOpen(open === i ? null : i)}
+                className="w-full py-8 flex justify-between items-center text-left hover:text-lime-karta transition-colors"
+              >
+                <span className="text-lg font-bold">{item.q}</span>
+                {open === i ? <Minus size={20} /> : <Plus size={20} />}
+              </button>
+              {open === i && (
+                <div className="pb-8 text-slate-400 font-medium leading-relaxed animate-in fade-in slide-in-from-top-2 duration-300">
+                  {item.a}
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+};
+
+export default FAQ;
+
+
+--------------------------------------------------
+File: C:\Users\scjot\Documents\cryptocard-premium-landing-page\components\Features.tsx
+--------------------------------------------------
+
+import React from 'react';
+import { Globe, Shield, Wallet, BarChart3 } from 'lucide-react';
+import { motion } from 'framer-motion';
+
+const Features: React.FC = () => {
+  return (
+    <section id="features" className="py-24 lg:py-40 bg-white">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="grid lg:grid-cols-2 gap-24 items-center">
+          <motion.div
+            initial={{ opacity: 0, x: -50 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true }}
+          >
+            <h2 className="text-5xl lg:text-7xl font-black text-black mb-12 leading-[0.9] tracking-tighter uppercase">
+              LIBERDADE <br />
+              <span className="text-accent">SEM FRONTEIRAS.</span>
+            </h2>
+            
+            <div className="space-y-10">
+              <div className="flex gap-8 group">
+                <div className="flex-shrink-0 w-16 h-16 bg-black text-accent rounded-2xl flex items-center justify-center group-hover:bg-accent group-hover:text-black transition-all duration-300">
+                  <Globe size={32} />
+                </div>
+                <div>
+                  <h4 className="text-2xl font-black text-black mb-3 tracking-tight">GLOBAL DE VERDADE</h4>
+                  <p className="text-lg text-slate-500 leading-relaxed font-medium">Aceito em mais de 200 países e 60 milhões de estabelecimentos. Onde tem Visa, tem CryptoCard.</p>
+                </div>
+              </div>
+
+              <div className="flex gap-8 group">
+                <div className="flex-shrink-0 w-16 h-16 bg-black text-accent rounded-2xl flex items-center justify-center group-hover:bg-accent group-hover:text-black transition-all duration-300">
+                  <Shield size={32} />
+                </div>
+                <div>
+                  <h4 className="text-2xl font-black text-black mb-3 tracking-tight">PRIVACIDADE ABSOLUTA</h4>
+                  <p className="text-lg text-slate-500 leading-relaxed font-medium">Seus dados não são nosso produto. Suas transações são protegidas por anonimato inteligente.</p>
+                </div>
+              </div>
+
+              <div className="flex gap-8 group">
+                <div className="flex-shrink-0 w-16 h-16 bg-black text-accent rounded-2xl flex items-center justify-center group-hover:bg-accent group-hover:text-black transition-all duration-300">
+                  <BarChart3 size={32} />
+                </div>
+                <div>
+                  <h4 className="text-2xl font-black text-black mb-3 tracking-tight">ANALÍTICO DE ELITE</h4>
+                  <p className="text-lg text-slate-500 leading-relaxed font-medium">Insights profundos sobre seus gastos e rendimentos em uma interface de tirar o fôlego.</p>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+
+          <motion.div 
+            initial={{ opacity: 0, x: 50 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true }}
+            className="relative"
+          >
+            <div className="grid grid-cols-2 gap-6">
+              <div className="space-y-6 pt-16">
+                <motion.div 
+                  whileHover={{ y: -10 }}
+                  className="aspect-square bg-black rounded-[3rem] flex items-center justify-center text-accent shadow-2xl shadow-black/10"
+                >
+                  <Wallet size={64} strokeWidth={1.5} />
+                </motion.div>
+                <img src="https://images.unsplash.com/photo-1639762681485-074b7f938ba0?auto=format&fit=crop&q=80&w=600" alt="crypto tech" className="aspect-[4/5] object-cover rounded-[3rem] grayscale hover:grayscale-0 transition-all duration-700 shadow-xl" />
+              </div>
+              <div className="space-y-6">
+                 <img src="https://images.unsplash.com/photo-1642104704074-907c0698cbd9?auto=format&fit=crop&q=80&w=600" alt="card close up" className="aspect-[4/5] object-cover rounded-[3rem] grayscale hover:grayscale-0 transition-all duration-700 shadow-xl" />
+                 <div className="aspect-square bg-accent rounded-[3rem] p-10 flex flex-col justify-end shadow-2xl shadow-accent/20">
+                    <p className="text-5xl font-black text-black tracking-tighter">99.9%</p>
+                    <p className="text-black/60 font-black uppercase text-xs tracking-widest mt-2">Segurança Ativa</p>
+                 </div>
+              </div>
+            </div>
+          </motion.div>
+        </div>
+      </div>
+    </section>
+  );
+};
+
+export default Features;
+
+
+--------------------------------------------------
+File: C:\Users\scjot\Documents\cryptocard-premium-landing-page\components\FeaturesGrid.tsx
+--------------------------------------------------
+
+import React from 'react';
+// Added Apple to the lucide-react imports
+import { Star, Landmark, Send, Sparkles, Check, Apple } from 'lucide-react';
+import { motion } from 'framer-motion';
+
+const FeaturesGrid: React.FC = () => {
+  return (
+    <section className="py-24 bg-white">
+      <div className="max-w-7xl mx-auto px-6">
+        <h2 className="text-5xl font-black text-center mb-24 uppercase">Other Features</h2>
+        
+        <div className="grid lg:grid-cols-3 gap-6">
+          {/* Cashback & Rewards Card */}
+          <div className="lg:col-span-1 bg-black text-white p-10 rounded-[2.5rem] relative overflow-hidden min-h-[500px] flex flex-col justify-between">
+             <div>
+                <div className="w-12 h-12 bg-pink-500/20 text-pink-500 rounded-2xl flex items-center justify-center mb-8">
+                  <Star size={24} fill="currentColor" />
+                </div>
+                <h3 className="text-2xl font-black mb-4 uppercase">Cashback and Rewards</h3>
+                <p className="text-slate-400 font-medium">Earn $5 for each activated friend and 25% cashback in Karat* every time they spend.</p>
+             </div>
+             
+             <div className="bg-slate-900/50 p-6 rounded-3xl mt-8">
+                <div className="text-center mb-6">
+                  <p className="text-4xl font-black text-lime-karta">24.850 <span className="text-lg">K</span></p>
+                </div>
+                <div className="space-y-4">
+                  <div className="flex justify-between items-center bg-white/5 p-3 rounded-xl">
+                    <div className="flex items-center gap-3"><Apple size={16} /> Apple Gift Card</div>
+                    <span className="text-xs font-bold text-slate-500">10.000 K</span>
+                  </div>
+                  <div className="flex justify-between items-center bg-white/5 p-3 rounded-xl">
+                    <div className="flex items-center gap-3"><Check size={16} /> Netflix 1 month</div>
+                    <span className="text-xs font-bold text-slate-500">5.000 K</span>
+                  </div>
+                </div>
+             </div>
+          </div>
+
+          <div className="lg:col-span-2 grid gap-6">
+             <div className="grid md:grid-cols-2 gap-6">
+                {/* Bank Account */}
+                <div className="bg-slate-100 p-10 rounded-[2.5rem] min-h-[300px]">
+                  <div className="w-12 h-12 bg-pink-100 text-pink-600 rounded-2xl flex items-center justify-center mb-8">
+                    <Landmark size={24} />
+                  </div>
+                  <h3 className="text-2xl font-black mb-4 uppercase">Virtual Bank Account</h3>
+                  <p className="text-slate-500 font-medium">Receive international transfers, payments for services, and any payouts directly to your Karta balance.</p>
+                </div>
+                {/* Money Transfer */}
+                <div className="bg-slate-800 text-white p-10 rounded-[2.5rem] min-h-[300px]">
+                  <div className="w-12 h-12 bg-purple-500/20 text-purple-400 rounded-2xl flex items-center justify-center mb-8">
+                    <Send size={24} fill="currentColor" />
+                  </div>
+                  <h3 className="text-2xl font-black mb-4 uppercase">Money Transfer</h3>
+                  <p className="text-slate-300 font-medium">Send Money like a Message to your contacts on Telegram, transfer crypto to external wallets.</p>
+                </div>
+             </div>
+
+             {/* AI Assistant - Keeping your AI logic but Karta styling */}
+             <div className="bg-lime-karta p-10 rounded-[2.5rem] flex items-center gap-8 min-h-[250px]">
+                <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center flex-shrink-0">
+                  <Sparkles size={32} className="text-black" />
+                </div>
+                <div>
+                   <h3 className="text-2xl font-black mb-2 uppercase">AI Assistance</h3>
+                   <p className="text-black/60 font-medium">Karta AI is an intelligent financial assistant providing AI-driven financial insights.</p>
+                </div>
+                <div className="hidden md:block bg-black/5 p-4 rounded-2xl border border-black/10">
+                   <p className="text-[10px] font-black uppercase text-black/40 mb-1">Karta AI</p>
+                   <p className="text-sm font-bold">You spent $54.30 at Starbucks this week.</p>
+                </div>
+             </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+};
+
+export default FeaturesGrid;
+
+
+--------------------------------------------------
+File: C:\Users\scjot\Documents\cryptocard-premium-landing-page\components\FinalCTA.tsx
+--------------------------------------------------
+
+import React from 'react';
+import { Send } from 'lucide-react';
+import { motion } from 'framer-motion';
+
+const FinalCTA: React.FC = () => {
+  return (
+    <section className="bg-lime-karta py-32 px-6">
+      <div className="max-w-7xl mx-auto text-center relative overflow-hidden">
+        {/* Background text decoration */}
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-[20vw] font-black text-black/5 whitespace-nowrap pointer-events-none select-none">
+          KARTA*KARTA
+        </div>
+
+        <motion.div 
+          initial={{ opacity: 0, scale: 0.9 }}
+          whileInView={{ opacity: 1, scale: 1 }}
+          viewport={{ once: true }}
+          className="relative z-10"
+        >
+          <h2 className="text-5xl lg:text-7xl font-black mb-12 tracking-tighter uppercase leading-none text-black">
+            Are you Ready? <br />
+            Join now!
+          </h2>
+          
+          <button className="bg-black text-white px-10 py-5 rounded-3xl text-xl font-black flex items-center justify-center gap-3 mx-auto hover:scale-105 transition-all shadow-2xl">
+            <Send size={24} fill="white" />
+            Get card with Telegram
+          </button>
+        </motion.div>
+      </div>
+    </section>
+  );
+};
+
+export default FinalCTA;
+
+
+--------------------------------------------------
+File: C:\Users\scjot\Documents\cryptocard-premium-landing-page\components\Footer.tsx
+--------------------------------------------------
+
+import React from 'react';
+import { Wallet, Instagram, Twitter, Linkedin } from 'lucide-react';
+
+const Footer: React.FC = () => {
+  return (
+    <footer className="bg-white border-t border-slate-100 py-20">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="grid md:grid-cols-4 gap-12 mb-16">
+          <div className="col-span-1 md:col-span-2">
+            <div className="flex items-center gap-2 mb-6">
+              <div className="w-8 h-8 bg-black rounded-lg flex items-center justify-center text-accent">
+                <Wallet size={18} />
+              </div>
+              <span className="text-lg font-bold tracking-tight text-black uppercase">CryptoCard</span>
+            </div>
+            <p className="text-slate-500 max-w-sm mb-8">
+              Liderando a revolução nos pagamentos digitais com tecnologia blockchain de ponta e design focado no usuário.
+            </p>
+            <div className="flex gap-4">
+              <a href="#" className="w-10 h-10 rounded-full border border-slate-200 flex items-center justify-center text-slate-400 hover:text-black hover:border-black transition-all">
+                <Instagram size={20} />
+              </a>
+              <a href="#" className="w-10 h-10 rounded-full border border-slate-200 flex items-center justify-center text-slate-400 hover:text-black hover:border-black transition-all">
+                <Twitter size={20} />
+              </a>
+              <a href="#" className="w-10 h-10 rounded-full border border-slate-200 flex items-center justify-center text-slate-400 hover:text-black hover:border-black transition-all">
+                <Linkedin size={20} />
+              </a>
+            </div>
+          </div>
+
+          <div>
+            <h5 className="font-bold text-black mb-6 uppercase text-xs tracking-widest">Produto</h5>
+            <ul className="space-y-4">
+              <li><a href="#" className="text-slate-500 hover:text-black text-sm transition-all">Planos</a></li>
+              <li><a href="#" className="text-slate-500 hover:text-black text-sm transition-all">Taxas</a></li>
+              <li><a href="#" className="text-slate-500 hover:text-black text-sm transition-all">Segurança</a></li>
+              <li><a href="#" className="text-slate-500 hover:text-black text-sm transition-all">API</a></li>
+            </ul>
+          </div>
+
+          <div>
+            <h5 className="font-bold text-black mb-6 uppercase text-xs tracking-widest">Suporte</h5>
+            <ul className="space-y-4">
+              <li><a href="#" className="text-slate-500 hover:text-black text-sm transition-all">Central de Ajuda</a></li>
+              <li><a href="#" className="text-slate-500 hover:text-black text-sm transition-all">Comunidade</a></li>
+              <li><a href="#" className="text-slate-500 hover:text-black text-sm transition-all">Status</a></li>
+              <li><a href="#" className="text-slate-500 hover:text-black text-sm transition-all">Contato</a></li>
+            </ul>
+          </div>
+        </div>
+
+        <div className="pt-8 border-t border-slate-100 flex flex-col md:flex-row justify-between items-center gap-4">
+          <p className="text-xs text-slate-400">© 2024 CryptoCard Inc. Todos os direitos reservados.</p>
+          <div className="flex gap-8">
+             <a href="#" className="text-xs text-slate-400 hover:text-black">Privacidade</a>
+             <a href="#" className="text-xs text-slate-400 hover:text-black">Termos</a>
+             <a href="#" className="text-xs text-slate-400 hover:text-black">Cookies</a>
+          </div>
+        </div>
+      </div>
+    </footer>
+  );
+};
+
+export default Footer;
+
+
+--------------------------------------------------
+File: C:\Users\scjot\Documents\cryptocard-premium-landing-page\components\GetYourCard.tsx
+--------------------------------------------------
+
+import React from 'react';
+import { motion } from 'framer-motion';
+import { Smartphone, CreditCard, Apple } from 'lucide-react';
+
+const GetYourCard: React.FC = () => {
+  return (
+    <section className="py-24 lg:py-40 bg-white">
+      <div className="max-w-7xl mx-auto px-6 grid lg:grid-cols-2 gap-20 items-center">
+        <motion.div 
+          initial={{ opacity: 0, y: 50 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          className="relative order-2 lg:order-1"
+        >
+          {/* Main Card Mockup Container */}
+          <div className="relative mx-auto max-w-sm">
+             {/* Icons floating like page 1 of PDF */}
+             <div className="absolute -top-12 -left-4 w-12 h-12 bg-slate-100 rounded-full flex items-center justify-center shadow-sm">
+                <CreditCard size={20} className="text-slate-600" />
+             </div>
+             <div className="absolute top-4 -left-16 w-12 h-12 bg-slate-100 rounded-full flex items-center justify-center shadow-sm">
+                <Smartphone size={20} className="text-slate-600" />
+             </div>
+             <div className="absolute -top-4 -right-8 w-12 h-12 bg-slate-100 rounded-full flex items-center justify-center shadow-sm">
+                <Apple size={20} className="text-slate-600" />
+             </div>
+
+             {/* Phone showing card */}
+             <div className="w-full aspect-[0.5] bg-black rounded-[3rem] p-4 border-[6px] border-slate-900 shadow-2xl relative">
+                <div className="w-full h-full bg-white rounded-[2.5rem] overflow-hidden flex flex-col items-center justify-center p-6 text-center">
+                  <div className="w-full aspect-[1.58] bg-slate-800 rounded-2xl mb-8 flex items-center justify-center relative overflow-hidden">
+                    <div className="absolute top-2 right-2 text-[10px] font-black text-white/20 italic">VISA</div>
+                    <div className="text-white font-bold tracking-widest">**** 1919</div>
+                  </div>
+                  <h4 className="font-black text-black text-xl mb-4">Issue a virtual or metal card</h4>
+                  <p className="text-slate-400 text-sm">Start spending worldwide.</p>
+                </div>
+             </div>
+          </div>
+        </motion.div>
+
+        <motion.div 
+          initial={{ opacity: 0, x: 50 }}
+          whileInView={{ opacity: 1, x: 0 }}
+          viewport={{ once: true }}
+          className="order-1 lg:order-2"
+        >
+          <h2 className="text-5xl font-black mb-8 leading-tight tracking-tight uppercase">
+            GET YOUR CARD <br />
+            TODAY
+          </h2>
+          <p className="text-xl text-slate-500 mb-10 leading-relaxed max-w-md">
+            Issue a virtual or metal Visa card in minute and start spending worldwide.
+          </p>
+        </motion.div>
+      </div>
+    </section>
+  );
+};
+
+export default GetYourCard;
+
+
+--------------------------------------------------
+File: C:\Users\scjot\Documents\cryptocard-premium-landing-page\components\Hero.tsx
+--------------------------------------------------
+
+import React from 'react';
+import { ArrowRight, CheckCircle2, Shield, Zap, TrendingUp } from 'lucide-react';
+import { motion } from 'framer-motion';
+
+const Hero: React.FC = () => {
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: { 
+      opacity: 1,
+      transition: { staggerChildren: 0.1 }
+    }
+  };
+
+  const itemVariants = {
+    hidden: { y: 20, opacity: 0 },
+    visible: { y: 0, opacity: 1 }
+  };
+
+  return (
+    <section className="relative pt-32 pb-20 lg:pt-48 lg:pb-40 overflow-hidden bg-white">
+      {/* Subtle Background elements */}
+      <div className="absolute top-0 right-0 -mr-20 -mt-20 w-[600px] h-[600px] bg-lime-100/30 rounded-full blur-[120px] -z-10"></div>
+      
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="grid lg:grid-cols-2 gap-16 items-center">
+          <motion.div 
+            variants={containerVariants}
+            initial="hidden"
+            animate="visible"
+            className="max-w-2xl"
+          >
+            <motion.div variants={itemVariants} className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-lime-100 text-black text-[10px] font-bold uppercase tracking-widest mb-8 border border-lime-200">
+              <CheckCircle2 size={12} className="text-lime-600" />
+              O Futuro dos Pagamentos
+            </motion.div>
+            
+            <motion.h1 variants={itemVariants} className="text-6xl lg:text-8xl font-black leading-[0.9] text-black mb-8 tracking-tighter uppercase">
+              SUA CRIPTO, <br />
+              NO CARTÃO.
+            </motion.h1>
+            
+            <motion.p variants={itemVariants} className="text-xl text-slate-600 mb-12 leading-relaxed max-w-lg font-medium">
+              Gaste seus ativos digitais em qualquer lugar do mundo com conversão instantânea e <span className="text-black font-bold">zero taxas abusivas.</span>
+            </motion.p>
+            
+            <motion.div variants={itemVariants} className="flex flex-col sm:flex-row gap-4">
+              <button className="bg-accent text-black px-10 py-5 rounded-2xl text-lg font-black hover:bg-black hover:text-white transition-all flex items-center justify-center gap-2 active:scale-95 group shadow-lg shadow-lime-100">
+                Começar agora
+                <ArrowRight className="group-hover:translate-x-1 transition-transform" />
+              </button>
+              <button className="bg-white text-black border-2 border-slate-100 px-10 py-5 rounded-2xl text-lg font-black hover:border-black transition-all flex items-center justify-center active:scale-95">
+                Ver Planos
+              </button>
+            </motion.div>
+
+            <motion.div variants={itemVariants} className="mt-12 flex items-center gap-6">
+              <div className="flex -space-x-3">
+                {[1, 2, 3, 4].map((i) => (
+                  <img key={i} src={`https://picsum.photos/seed/${i + 20}/64/64`} alt="user" className="w-10 h-10 rounded-full border-4 border-white shadow-sm" />
+                ))}
+              </div>
+              <div className="h-8 w-px bg-slate-200"></div>
+              <p className="text-sm font-bold text-slate-500 uppercase tracking-tighter">Confiança de +15k usuários</p>
+            </motion.div>
+          </motion.div>
+
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.8, rotate: 10 }}
+            animate={{ opacity: 1, scale: 1, rotate: 3 }}
+            transition={{ duration: 0.8, ease: "easeOut" }}
+            className="relative"
+          >
+            {/* Main Card */}
+            <div className="relative z-10 w-full aspect-[1.586/1] max-w-lg mx-auto bg-black rounded-[2.5rem] p-10 text-white crypto-card-glow transform transition-all duration-700 hover:rotate-0 hover:scale-105 overflow-hidden group">
+              <div className="absolute top-0 right-0 w-48 h-48 bg-accent/20 blur-[80px] group-hover:bg-accent/30 transition-all"></div>
+              
+              <div className="flex justify-between items-start mb-16">
+                <div className="w-14 h-11 bg-gradient-to-br from-slate-200 to-slate-400 rounded-lg flex items-center justify-center">
+                   <div className="w-10 h-7 border border-black/20 rounded-md"></div>
+                </div>
+                <div className="flex flex-col items-end">
+                  <span className="text-[10px] font-black opacity-40 uppercase tracking-[0.3em]">CRYPTO CARD</span>
+                  <div className="text-3xl font-black italic tracking-tighter text-accent">BLACK</div>
+                </div>
+              </div>
+
+              <div className="mb-10">
+                <div className="text-2xl font-mono tracking-[0.25em] opacity-80">**** **** **** 0042</div>
+              </div>
+
+              <div className="flex justify-between items-end">
+                <div>
+                  <div className="text-[10px] uppercase opacity-40 font-bold mb-1 tracking-widest">PROPRIETÁRIO</div>
+                  <div className="text-xl font-bold tracking-tight">AUGUSTO MEIRELES</div>
+                </div>
+                <div className="flex items-center gap-5">
+                   <div className="text-[10px] uppercase opacity-40 text-right font-bold leading-none">
+                    VALID<br/>12/29
+                   </div>
+                   <div className="flex -space-x-4">
+                     <div className="w-12 h-12 bg-white/10 rounded-full backdrop-blur-sm border border-white/20"></div>
+                     <div className="w-12 h-12 bg-accent/80 rounded-full backdrop-blur-sm"></div>
+                   </div>
+                </div>
+              </div>
+            </div>
+            
+            {/* Floating Pop-ups */}
+            <motion.div 
+              initial={{ x: 50, opacity: 0 }}
+              animate={{ x: 0, opacity: 1 }}
+              transition={{ delay: 0.5 }}
+              className="absolute -bottom-8 -left-8 z-20 bg-white p-5 rounded-3xl shadow-2xl border border-slate-100 flex items-center gap-4 animate-bounce duration-[3000ms]"
+            >
+              <div className="w-12 h-12 bg-accent text-black rounded-full flex items-center justify-center">
+                <TrendingUp size={24} />
+              </div>
+              <div>
+                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Cashback</p>
+                <p className="font-black text-black text-lg">+4.5% BTC</p>
+              </div>
+            </motion.div>
+
+            <motion.div 
+              initial={{ x: -50, opacity: 0 }}
+              animate={{ x: 0, opacity: 1 }}
+              transition={{ delay: 0.7 }}
+              className="absolute -top-10 -right-4 z-20 bg-black text-white p-5 rounded-3xl shadow-2xl flex items-center gap-4"
+            >
+              <div className="w-12 h-12 bg-accent text-black rounded-full flex items-center justify-center">
+                <Shield size={24} />
+              </div>
+              <div>
+                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Segurança</p>
+                <p className="font-black text-white text-lg">Proteção 24/7</p>
+              </div>
+            </motion.div>
+
+            <motion.div 
+              initial={{ y: 20, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ delay: 0.9 }}
+              className="absolute top-1/2 -right-12 z-20 bg-white p-4 rounded-2xl shadow-xl border border-slate-100 flex items-center gap-3"
+            >
+              <div className="w-10 h-10 bg-lime-100 text-lime-600 rounded-full flex items-center justify-center">
+                <Zap size={20} fill="currentColor" />
+              </div>
+              <div>
+                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Conversão</p>
+                <p className="font-bold text-black">Instantânea</p>
+              </div>
+            </motion.div>
+          </motion.div>
+        </div>
+      </div>
+    </section>
+  );
+};
+
+export default Hero;
+
+
+--------------------------------------------------
+File: C:\Users\scjot\Documents\cryptocard-premium-landing-page\components\HowItWorks.tsx
+--------------------------------------------------
+
+import React from 'react';
+import { motion } from 'framer-motion';
+
+const steps = [
+  {
+    number: "01",
+    title: "Cadastro Instantâneo",
+    description: "Baixe o app e verifique sua identidade em segundos. Sem burocracia bancária."
+  },
+  {
+    number: "02",
+    title: "Deposite sua Cripto",
+    description: "Envie BTC, ETH ou stablecoins para sua carteira segura com um clique."
+  },
+  {
+    number: "03",
+    title: "Poder de Compra",
+    description: "Use seu cartão físico ou virtual em milhões de lojas. É simples assim."
+  }
+];
+
+const HowItWorks: React.FC = () => {
+  return (
+    <section id="how-it-works" className="py-24 lg:py-40 bg-slate-50 relative overflow-hidden">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+        <motion.div 
+          initial={{ opacity: 0 }}
+          whileInView={{ opacity: 1 }}
+          viewport={{ once: true }}
+          className="text-center mb-24"
+        >
+          <h2 className="text-5xl font-black text-black mb-6 tracking-tighter uppercase">Simplicidade Radical</h2>
+          <p className="text-xl text-slate-500 max-w-xl mx-auto font-medium">
+            Três passos separam você da nova era do dinheiro.
+          </p>
+        </motion.div>
+
+        <div className="grid md:grid-cols-3 gap-8">
+          {steps.map((step, index) => (
+            <motion.div 
+              key={index}
+              initial={{ opacity: 0, x: index % 2 === 0 ? -30 : 30 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6, delay: index * 0.2 }}
+              className="bg-white p-12 rounded-[3rem] border border-slate-100 shadow-sm relative overflow-hidden group hover:shadow-xl transition-all"
+            >
+              <div className="text-8xl font-black text-slate-50 absolute -right-4 -top-4 select-none group-hover:text-accent/20 transition-colors">
+                {step.number}
+              </div>
+              <div className="relative z-10">
+                <div className="w-16 h-16 rounded-2xl bg-black text-accent flex items-center justify-center text-2xl font-black mb-8">
+                  {step.number}
+                </div>
+                <h3 className="text-2xl font-black text-black mb-4 uppercase tracking-tighter">{step.title}</h3>
+                <p className="text-slate-500 leading-relaxed font-medium">{step.description}</p>
+              </div>
+            </motion.div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+};
+
+export default HowItWorks;
+
+
+--------------------------------------------------
+File: C:\Users\scjot\Documents\cryptocard-premium-landing-page\components\Navbar.tsx
+--------------------------------------------------
+
+import React from 'react';
+import { Wallet } from 'lucide-react';
+import { motion } from 'framer-motion';
+
+const Navbar: React.FC = () => {
+  return (
+    <motion.nav 
+      initial={{ y: -100 }}
+      animate={{ y: 0 }}
+      className="fixed top-0 left-0 right-0 z-50 bg-white/90 backdrop-blur-md border-b border-slate-100"
+    >
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <div className="w-10 h-10 bg-black rounded-xl flex items-center justify-center text-accent">
+            <Wallet size={24} />
+          </div>
+          <span className="text-xl font-bold tracking-tighter text-black uppercase">CryptoCard</span>
+        </div>
+        
+        <div className="hidden md:flex items-center gap-10">
+          <a href="#benefits" className="text-sm font-semibold text-slate-500 hover:text-black transition-colors">Benefícios</a>
+          <a href="#how-it-works" className="text-sm font-semibold text-slate-500 hover:text-black transition-colors">Como Funciona</a>
+          <a href="#features" className="text-sm font-semibold text-slate-500 hover:text-black transition-colors">Funcionalidades</a>
+        </div>
+
+        <div>
+          <button className="bg-black text-white px-6 py-2.5 rounded-full text-sm font-bold hover:bg-accent hover:text-black transition-all active:scale-95">
+            Começar agora
+          </button>
+        </div>
+      </div>
+    </motion.nav>
+  );
+};
+
+export default Navbar;
+
+
+--------------------------------------------------
+File: C:\Users\scjot\Documents\cryptocard-premium-landing-page\components\Testimonials.tsx
+--------------------------------------------------
+
+import React from 'react';
+import { Star } from 'lucide-react';
+
+const testimonials = [
+  {
+    name: "Ricardo Oliveira",
+    role: "Investidor de Cripto",
+    content: "O CryptoCard mudou minha relação com meus lucros. Agora posso usar os rendimentos das minhas moedas sem precisar transferir para bancos tradicionais.",
+    image: "https://picsum.photos/seed/p1/64/64"
+  },
+  {
+    name: "Ana Beatriz",
+    role: "Nômade Digital",
+    content: "O melhor cartão para quem viaja. As taxas de conversão de stablecoins são muito melhores do que qualquer casa de câmbio que já usei.",
+    image: "https://picsum.photos/seed/p2/64/64"
+  },
+  {
+    name: "Marcos Vinicius",
+    role: "Desenvolvedor",
+    content: "Interface impecável e suporte rápido. A sensação de pagar um jantar com Ethereum é simplesmente indescritível.",
+    image: "https://picsum.photos/seed/p3/64/64"
+  }
+];
+
+const Testimonials: React.FC = () => {
+  return (
+    <section className="py-24 bg-slate-50">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="text-center mb-16">
+          <h2 className="text-3xl font-bold text-slate-900 mb-4">O que dizem nossos usuários</h2>
+          <div className="flex justify-center gap-1">
+            {[1, 2, 3, 4, 5].map((s) => <Star key={s} className="text-yellow-400 fill-yellow-400" size={20} />)}
+          </div>
+        </div>
+
+        <div className="grid md:grid-cols-3 gap-8">
+          {testimonials.map((t, i) => (
+            <div key={i} className="bg-white p-8 rounded-3xl shadow-sm border border-slate-100">
+              <p className="text-slate-600 italic mb-8 leading-relaxed">"{t.content}"</p>
+              <div className="flex items-center gap-4">
+                <img src={t.image} alt={t.name} className="w-12 h-12 rounded-full object-cover" />
+                <div>
+                  <h4 className="font-bold text-slate-900">{t.name}</h4>
+                  <p className="text-xs text-slate-500">{t.role}</p>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+};
+
+export default Testimonials;
+
+
+--------------------------------------------------
+File: C:\Users\scjot\Documents\cryptocard-premium-landing-page\components\ValueProp.tsx
+--------------------------------------------------
+
+import React from 'react';
+import { motion } from 'framer-motion';
+
+const ValueProp: React.FC = () => {
+  return (
+    <section className="py-24 lg:py-40 bg-white overflow-hidden">
+      <div className="max-w-7xl mx-auto px-6">
+        <div className="grid lg:grid-cols-2 gap-12 lg:gap-24 items-center">
+          
+          {/* Imagem à Esquerda */}
+          <motion.div 
+            initial={{ opacity: 0, x: -50 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.8, ease: "easeOut" }}
+            className="relative flex justify-center lg:justify-end"
+          >
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[80%] h-[80%] bg-accent/20 rounded-full blur-[100px] -z-10"></div>
+            <img 
+              src="https://cdn.prod.website-files.com/668fc11cc73a66df17137589/67b58dc5cd50e2ece5e93054_iPhone.png" 
+              alt="iPhone Mockup Karta" 
+              className="w-full max-w-[400px] h-auto object-contain drop-shadow-2xl"
+              onError={(e) => {
+                e.currentTarget.src = "https://images.unsplash.com/photo-1512941937669-90a1b58e7e9c?auto=format&fit=crop&w=600";
+              }}
+            />
+          </motion.div>
+
+          {/* Texto à Direita */}
+          <motion.div 
+            initial={{ opacity: 0, x: 50 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.8, ease: "easeOut", delay: 0.2 }}
+            className="text-left"
+          >
+            <h2 className="text-5xl lg:text-7xl font-black text-black mb-8 uppercase tracking-tighter leading-tight">
+              Obtenha seu <br />
+              cartão hoje
+            </h2>
+            <p className="text-xl lg:text-2xl text-slate-500 leading-relaxed font-medium max-w-xl">
+              Emita um cartão Visa virtual ou metálico em minutos e comece a gastar em todo o mundo.
+            </p>
+            
+            <div className="mt-12 flex items-center gap-4">
+              <div className="w-12 h-1 bg-black rounded-full"></div>
+              <span className="text-xs font-black uppercase tracking-[0.3em] text-slate-400">Praticidade Absoluta</span>
+            </div>
+          </motion.div>
+
+        </div>
+      </div>
+    </section>
+  );
+};
+
+export default ValueProp;
+
+
+--------------------------------------------------
+File: C:\Users\scjot\Documents\cryptocard-premium-landing-page\.env.local
+--------------------------------------------------
+GEMINI_API_KEY=PLACEHOLDER_API_KEY
+
+
+--------------------------------------------------
+File: C:\Users\scjot\Documents\cryptocard-premium-landing-page\.gitignore
+--------------------------------------------------
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+node_modules
+dist
+dist-ssr
+*.local
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+
+--------------------------------------------------
+File: C:\Users\scjot\Documents\cryptocard-premium-landing-page\App.tsx
+--------------------------------------------------
+
+import React from 'react';
+import Navbar from './components/Navbar';
+import Hero from './components/Hero';
+import ValueProp from './components/ValueProp';
+import Benefits from './components/Benefits';
+import HowItWorks from './components/HowItWorks';
+import AICardRecommender from './components/AICardRecommender';
+import Features from './components/Features';
+import Testimonials from './components/Testimonials';
+import FinalCTA from './components/FinalCTA';
+import Footer from './components/Footer';
+
+const App: React.FC = () => {
+  return (
+    <div className="min-h-screen flex flex-col selection:bg-lime-300">
+      <Navbar />
+      <main className="flex-grow">
+        <Hero />
+        <ValueProp />
+        <Benefits />
+        <HowItWorks />
+        <AICardRecommender />
+        <Features />
+        <Testimonials />
+        <FinalCTA />
+      </main>
+      <Footer />
+    </div>
+  );
+};
+
+export default App;
+
+
+--------------------------------------------------
+File: C:\Users\scjot\Documents\cryptocard-premium-landing-page\index.html
+--------------------------------------------------
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CryptoCard - Sua cripto, no cartão.</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            scroll-behavior: smooth;
+            background-color: #ffffff;
+            color: #000000;
+        }
+        ::selection {
+            background-color: #bef264;
+            color: #000000;
+        }
+        .text-accent {
+            color: #a3e635;
+        }
+        .bg-accent {
+            background-color: #bef264;
+        }
+        .border-accent {
+            border-color: #bef264;
+        }
+        .crypto-card-glow {
+            box-shadow: 0 0 50px rgba(190, 242, 100, 0.15);
+        }
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #ffffff;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #e2e8f0;
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #cbd5e1;
+        }
+    </style>
+<script type="importmap">
+{
+  "imports": {
+    "react/": "https://esm.sh/react@^19.2.3/",
+    "react": "https://esm.sh/react@^19.2.3",
+    "@google/genai": "https://esm.sh/@google/genai@^1.34.0",
+    "lucide-react": "https://esm.sh/lucide-react@^0.561.0",
+    "react-dom/": "https://esm.sh/react-dom@^19.2.3/",
+    "framer-motion": "https://esm.sh/framer-motion@^11.0.0"
+  }
+}
+</script>
+<link rel="stylesheet" href="/index.css">
+</head>
+<body class="bg-white text-black overflow-x-hidden">
+    <div id="root"></div>
+<script type="module" src="/index.tsx"></script>
+</body>
+</html>
+
+
+--------------------------------------------------
+File: C:\Users\scjot\Documents\cryptocard-premium-landing-page\index.tsx
+--------------------------------------------------
+
+import React from 'react';
+import ReactDOM from 'react-dom/client';
+import App from './App';
+
+const rootElement = document.getElementById('root');
+if (!rootElement) {
+  throw new Error("Could not find root element to mount to");
+}
+
+const root = ReactDOM.createRoot(rootElement);
+root.render(
+  <React.StrictMode>
+    <App />
+  </React.StrictMode>
+);
+
+
+--------------------------------------------------
+File: C:\Users\scjot\Documents\cryptocard-premium-landing-page\metadata.json
+--------------------------------------------------
+{
+  "name": "CryptoCard Premium Landing Page",
+  "description": "A high-conversion, minimalist landing page for a cryptocurrency card featuring premium design, smooth animations, and a Gemini-powered plan recommender.",
+  "requestFramePermissions": []
+}
+
+
+--------------------------------------------------
+File: C:\Users\scjot\Documents\cryptocard-premium-landing-page\package.json
+--------------------------------------------------
+{
+  "name": "cryptocard-premium-landing-page",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "react": "^19.2.3",
+    "@google/genai": "^1.34.0",
+    "lucide-react": "^0.561.0",
+    "react-dom": "^19.2.3",
+    "framer-motion": "^11.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.14.0",
+    "@vitejs/plugin-react": "^5.0.0",
+    "typescript": "~5.8.2",
+    "vite": "^6.2.0"
+  }
+}
+
+
+--------------------------------------------------
+File: C:\Users\scjot\Documents\cryptocard-premium-landing-page\README.md
+--------------------------------------------------
+<div align="center">
+<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
+</div>
+
+# Run and deploy your AI Studio app
+
+This contains everything you need to run your app locally.
+
+View your app in AI Studio: https://ai.studio/apps/drive/19T_jqwXhB1QY7VCKy0cSIFQdT5LF5BnY
+
+## Run Locally
+
+**Prerequisites:**  Node.js
+
+
+1. Install dependencies:
+   `npm install`
+2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
+3. Run the app:
+   `npm run dev`
+
+
+--------------------------------------------------
+File: C:\Users\scjot\Documents\cryptocard-premium-landing-page\tsconfig.json
+--------------------------------------------------
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "experimentalDecorators": true,
+    "useDefineForClassFields": false,
+    "module": "ESNext",
+    "lib": [
+      "ES2022",
+      "DOM",
+      "DOM.Iterable"
+    ],
+    "skipLibCheck": true,
+    "types": [
+      "node"
+    ],
+    "moduleResolution": "bundler",
+    "isolatedModules": true,
+    "moduleDetection": "force",
+    "allowJs": true,
+    "jsx": "react-jsx",
+    "paths": {
+      "@/*": [
+        "./*"
+      ]
+    },
+    "allowImportingTsExtensions": true,
+    "noEmit": true
+  }
+}
+
+
+--------------------------------------------------
+File: C:\Users\scjot\Documents\cryptocard-premium-landing-page\vite.config.ts
+--------------------------------------------------
+import path from 'path';
+import { defineConfig, loadEnv } from 'vite';
+import react from '@vitejs/plugin-react';
+
+export default defineConfig(({ mode }) => {
+    const env = loadEnv(mode, '.', '');
+    return {
+      server: {
+        port: 3000,
+        host: '0.0.0.0',
+      },
+      plugins: [react()],
+      define: {
+        'process.env.API_KEY': JSON.stringify(env.GEMINI_API_KEY),
+        'process.env.GEMINI_API_KEY': JSON.stringify(env.GEMINI_API_KEY)
+      },
+      resolve: {
+        alias: {
+          '@': path.resolve(__dirname, '.'),
+        }
+      }
+    };
+});
+
+
