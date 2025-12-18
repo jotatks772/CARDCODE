@@ -1,0 +1,72 @@
+body {
+    font-family: 'Inter', sans-serif;
+    scroll-behavior: smooth;
+    background-color: #ffffff;
+    color: #000000;
+}
+::selection {
+    background-color: #bef264;
+    color: #000000;
+}
+.text-accent {
+    color: #a3e635;
+}
+.bg-accent {
+    background-color: #bef264;
+}
+.border-accent {
+    border-color: #bef264;
+}
+.crypto-card-glow {
+    box-shadow: 0 0 50px rgba(190, 242, 100, 0.15);
+}
+/* Custom scrollbar */
+::-webkit-scrollbar {
+    width: 8px;
+}
+::-webkit-scrollbar-track {
+    background: #ffffff;
+}
+::-webkit-scrollbar-thumb {
+    background: #e2e8f0;
+    border-radius: 10px;
+}
+::-webkit-scrollbar-thumb:hover {
+    background: #cbd5e1;
+}
+
+
+/* Animations */
+@keyframes slideDown {
+    from { transform: translateY(-100%); }
+    to { transform: translateY(0); }
+}
+.animate-slide-down {
+    animation: slideDown 0.5s ease-out forwards;
+}
+
+
+@keyframes slideUp {
+    from { transform: translateY(20px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+}
+.animate-slide-up {
+    animation: slideUp 0.6s ease-out forwards;
+    opacity: 0; /* Starts hidden */
+}
+.delay-100 { animation-delay: 100ms; }
+.delay-200 { animation-delay: 200ms; }
+.delay-300 { animation-delay: 300ms; }
+.delay-400 { animation-delay: 400ms; }
+.delay-500 { animation-delay: 500ms; }
+.delay-700 { animation-delay: 700ms; }
+.delay-900 { animation-delay: 900ms; }
+
+
+@keyframes float {
+    0%, 100% { transform: translateY(0) rotate(0deg); }
+    50% { transform: translateY(-15px) rotate(5deg); }
+}
+.animate-float {
+    animation: float 4s ease-in-out infinite;
+}
